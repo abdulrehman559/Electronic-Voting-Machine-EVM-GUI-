@@ -1,0 +1,195 @@
+Code : 
+Software Requirements 
+1: BLUE J 
+ 
+import javax.swing.*; 
+import java.awt.*; 
+import java.awt.event.ActionEvent; 
+import java.awt.event.ActionListener; 
+import java.util.HashMap; 
+import java.util.Map; 
+ 
+class Candidate { 
+    private String name; 
+    private String symbol; 
+    private int votes; 
+ 
+    public Candidate(String name, String symbol) { 
+        this.name = name; 
+        this.symbol = symbol; 
+        this.votes = 0; 
+    } 
+ 
+    public String getName() { 
+        return name; 
+    } 
+ 
+    public String getSymbol() { 
+        return symbol; 
+    } 
+ 
+    public int getVotes() { 
+        return votes; 
+    } 
+ 
+    public void vote() { 
+        votes++; 
+    } 
+} 
+ 
+class VotingMachineGUI extends JFrame { 
+    private Map<Integer, Candidate> candidates; 
+    private JTextArea votedListTextArea; 
+    private JTextField voterIdTextField; 
+    private final int[] validVoterIds = {11, 22, 33, 44, 55, 66, 77, 88, 99, 100}; 
+    private boolean[] votedStatus; 
+ 
+    public VotingMachineGUI() { 
+        candidates = new HashMap<>(); 
+        initializeCandidates(); 
+        votedStatus = new boolean[validVoterIds.length]; 
+        createGUI(); 
+    } 
+ 
+    private void initializeCandidates() { 
+        candidates.put(1, new Candidate("Imran Khan", "Bat")); 
+        candidates.put(2, new Candidate("Nawaz Sharif", "Lion")); 
+        candidates.put(3, new Candidate("Bilawal Bhutto", "Axe")); 
+        candidates.put(4, new Candidate("Fazul Rehman", "Book")); 
+        candidates.put(5, new Candidate("Jahangir Tareen", "Eagle")); 
+    } 
+ 
+    private void createGUI() { 
+        setTitle("Voting Machine"); 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+        setSize(600, 500); 
+        setLocationRelativeTo(null); 
+ 
+        JPanel panel = new JPanel(); 
+        panel.setLayout(new GridLayout(8, 1)); 
+ 
+        // Adding Election Commission Of Pakistan in Bold 
+        JLabel electionCommissionLabel = new JLabel("<html><b>The Election Commission 
+Of Pakistan</b></html>"); 
+        electionCommissionLabel.setHorizontalAlignment(JLabel.CENTER); 
+        electionCommissionLabel.setFont(new Font("Arial", Font.BOLD, 20)); 
+        panel.add(electionCommissionLabel); 
+ 
+        // Adding JTextField for Voter ID 
+        JLabel voterIdLabel = new JLabel("Voter ID:"); 
+        voterIdLabel.setFont(new Font("Arial", Font.PLAIN, 16)); 
+        voterIdTextField = new JTextField(); 
+        voterIdTextField.setFont(new Font("Arial", Font.PLAIN, 16)); 
+        panel.add(voterIdLabel); 
+        panel.add(voterIdTextField); 
+ 
+        for (Map.Entry<Integer, Candidate> entry : candidates.entrySet()) { 
+            Candidate candidate = entry.getValue(); 
+            JButton button = new JButton(candidate.getName() + " (" + candidate.getSymbol() + 
+")"); 
+            button.addActionListener(new VoteButtonListener(entry.getKey())); 
+            button.setFont(new Font("Arial", Font.PLAIN, 16)); 
+            panel.add(button); 
+        } 
+ 
+        JButton resultButton = new JButton("Show Result"); 
+        resultButton.addActionListener(new ResultButtonListener()); 
+        resultButton.setFont(new Font("Arial", Font.BOLD, 16)); 
+        panel.add(resultButton); 
+ 
+        votedListTextArea = new JTextArea(); 
+        votedListTextArea.setEditable(false); 
+        JScrollPane scrollPane = new JScrollPane(votedListTextArea); 
+ 
+        panel.add(scrollPane); 
+ 
+        add(panel); 
+    } 
+ 
+    private class VoteButtonListener implements ActionListener { 
+        private int candidateId; 
+ 
+        public VoteButtonListener(int candidateId) { 
+            this.candidateId = candidateId; 
+        } 
+ 
+        @Override 
+        public void actionPerformed(ActionEvent e) { 
+            String voterIdStr = voterIdTextField.getText().trim(); 
+ 
+            if (voterIdStr.isEmpty()) { 
+                JOptionPane.showMessageDialog(null, "Please enter Voter ID.", "Error", 
+JOptionPane.ERROR_MESSAGE); 
+                return; 
+            } 
+ 
+            try { 
+                int voterId = Integer.parseInt(voterIdStr); 
+ 
+                // Check if the entered voterId is valid 
+                int voterIndex = getVoterIndex(voterId); 
+                if (voterIndex != -1 && !votedStatus[voterIndex]) { 
+                    Candidate candidate = candidates.get(candidateId); 
+                    candidate.vote(); 
+                    votedStatus[voterIndex] = true; // Mark the voter as voted 
+                    votedListTextArea.append(candidate.getName() + " voted.\n"); 
+                } else if (voterIndex == -1) { 
+                    JOptionPane.showMessageDialog(null, "Invalid Voter ID. Please enter a valid 
+number.", "Error", JOptionPane.ERROR_MESSAGE); 
+                } else { 
+                    JOptionPane.showMessageDialog(null, "This voter has already cast a vote.", 
+"Error", JOptionPane.ERROR_MESSAGE); 
+                } 
+            } catch (NumberFormatException ex) { 
+                JOptionPane.showMessageDialog(null, "Invalid Voter ID. Please enter a valid 
+number.", "Error", JOptionPane.ERROR_MESSAGE); 
+            } 
+        } 
+ 
+        private int getVoterIndex(int voterId) { 
+            for (int i = 0; i < validVoterIds.length; i++) { 
+                if (voterId == validVoterIds[i]) { 
+                    return i; 
+                } 
+            } 
+            return -1; 
+        } 
+    } 
+ 
+    private class ResultButtonListener implements ActionListener { 
+        @Override 
+        public void actionPerformed(ActionEvent e) { 
+            StringBuilder result = new StringBuilder("Election Result:\n"); 
+ 
+            Candidate winner = null; 
+            for (Candidate candidate : candidates.values()) { 
+                result.append(candidate.getName()).append(": 
+").append(candidate.getVotes()).append(" votes\n"); 
+                if (winner == null || candidate.getVotes() > winner.getVotes()) { 
+                    winner = candidate; 
+                } 
+            } 
+ 
+            if (winner != null) { 
+                result.append("\nWinner: ").append(winner.getName()).append(" (Symbol: 
+").append(winner.getSymbol()).append(")"); 
+            } 
+ 
+            JTextArea resultTextArea = new JTextArea(result.toString()); 
+            resultTextArea.setFont(new Font("Arial", Font.BOLD, 16)); 
+            resultTextArea.setEditable(false); 
+            JOptionPane.showMessageDialog(null, new JScrollPane(resultTextArea), "Election 
+Result", JOptionPane.INFORMATION_MESSAGE); 
+        } 
+    } 
+} 
+ 
+public class ElectionCommisionOFPakistan { 
+    public static void main(String[] args) { 
+        SwingUtilities.invokeLater(() -> { 
+            VotingMachineGUI votingMachineGUI = new VotingMachineGUI(); 
+            votingMachineGUI.setVisible(true); 
+        }); 
+    } 
+} 
+ 
